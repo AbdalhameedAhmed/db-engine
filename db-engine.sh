@@ -90,7 +90,12 @@ set_allowed_auth_options
             "Exit")
                 exit
                 ;;
-            *) echo "invalid option $REPLY";;
+            *) 
+            echo
+            output_error_message "invalid option $REPLY"
+            echo
+            break
+            ;;
         esac
 
     done

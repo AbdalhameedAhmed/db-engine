@@ -55,7 +55,7 @@ if [[ -n "$login_user_info" ]]; then
         output_success_message "Login successful"
         echo
         loggedInUser="$username"
-        PS3=$username"/dbManager: "
+        PS3=$username"/dbManaging: "
         source $script_dir/scripts/dbManager/main.sh
     else
         output_error_message "Username or password is incorrect"        
