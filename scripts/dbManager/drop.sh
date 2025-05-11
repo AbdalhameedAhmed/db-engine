@@ -9,6 +9,7 @@ echo
 #============ end initial information ============
 
 #============ start helper functions ============
+
 database_exists() {
     local db_name="$1"
     if [[ -d "$engine_dir/.db-engine-users/$loggedInUser/$db_name" ]]; then
@@ -17,16 +18,20 @@ database_exists() {
         return 1
     fi
 }
+
 #============ end helper functions ============
 
 #============ start script body ============
-
+while true ; do
 read -p "Enter database name: " db_name
 if [[ -n "$db_name" ]]; then
-    if database_exists $db_name ;then
+    if [[ "$db_name" == "exit" ]]; then
+        break
+    elif database_exists $db_name ;then
     rm -r "$engine_dir/.db-engine-users/$loggedInUser/$db_name"
     output_success_message "Database dropped successfully"
     sleep 1
+    break
     else
     output_error_message "Database does not exist"
     sleep 1
@@ -35,6 +40,5 @@ if [[ -n "$db_name" ]]; then
     output_error_message "Enter an existing database name or exit to cancel"
     sleep 1
 fi
-fi
-
+done
 #============ end script body ============

@@ -2,8 +2,9 @@
 
 #============ start global variables ============
 
-dbManager_options=("Create database" "Connect to database" "list databases" "drop database" "Logout")
+dbManager_options=("Create database" "Connect to database" "List databases" "Drop database" "Logout")
 logout=""
+connected_db=""
 #============ end global variables ============
 
 #============ start helper functions ============
@@ -36,6 +37,11 @@ while [[ -z "$logout" ]] ; do
 
             "Create database")
                 source $script_dir/scripts/dbManager/create.sh
+                break
+            ;;
+
+            "Connect to database")
+                source $script_dir/scripts/dbManager/connect.sh
                 break
             ;;
 
