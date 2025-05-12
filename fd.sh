@@ -1,0 +1,1 @@
+^\s*(create)\s+table\s+${check_name_validity}\s*\(\s*${check_name_validity}\s+${check_column_type}\s*${check_constraint}?\s*(,\s*${check_name_validity}\s+${check_column_type}\s*${check_constraint}?\s*)*\)$

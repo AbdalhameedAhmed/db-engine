@@ -5,7 +5,7 @@
 scriptPath=$(realpath "$0")
 script_dir=$(dirname "$scriptPath")
 engine_dir=$(dirname "$script_dir")
-loggedInUser=""
+loggedInUser="ahmed"
 usersContent=""
 auth_options=("Login" "Create new user" "Exit")
 allowed_auth_options=()
@@ -71,35 +71,38 @@ add_passwd_file
 # ensure that the users directory exists
 add_users_dir
 
-while true; do
+source $script_dir/scripts/dbManager/main.sh
 
-set_allowed_auth_options
 
-    select mode in "${allowed_auth_options[@]}" ; do
-        case $mode in
-            "Login")
-            # login scenario
-                source $script_dir/scripts/auth/login.sh
-                break
-                ;;
-            "Create new user")
-            # register scenario
-                source $script_dir/scripts/auth/register.sh
-                break
-                ;;
-            "Exit")
-                exit
-                ;;
-            *) 
-            echo
-            output_error_message "invalid option $REPLY"
-            echo
-            break
-            ;;
-        esac
+# while true; do
 
-    done
+# set_allowed_auth_options
 
-done
+#     select mode in "${allowed_auth_options[@]}" ; do
+#         case $mode in
+#             "Login")
+#             # login scenario
+#                 source $script_dir/scripts/auth/login.sh
+#                 break
+#                 ;;
+#             "Create new user")
+#             # register scenario
+#                 source $script_dir/scripts/auth/register.sh
+#                 break
+#                 ;;
+#             "Exit")
+#                 exit
+#                 ;;
+#             *) 
+#             echo
+#             output_error_message "invalid option $REPLY"
+#             echo
+#             break
+#             ;;
+#         esac
+
+#     done
+
+# done
 
 #============ end script body ============

@@ -1,0 +1,138 @@
+#! /usr/bin/bash
+
+#============ start global variables ============
+
+check_name_validity='[a-zA-Z][a-zA-Z_]*'
+check_column_type='(int|varchar\([1-9][0-9]*\))'
+check_constraint="(\s+primary key|(\s+(references\s+[a-zA-Z][a-zA-Z_]*\s*\([a-zA-Z][a-zA-Z_]*\))|\s+unique|\s+not null)*)"
+sql_create_regex="^\s*(create)\s+table\s+${check_name_validity}\s*\(\s*${check_name_validity}\s+${check_column_type}\s*${check_constraint}?\s*(,\s*${check_name_validity}\s+${check_column_type}\s*${check_constraint}?\s*)*\)$"
+
+#============ end global variables ============
+
+#============ start helper functions ============
+
+get_table_name() {
+    local sql_code=$1
+    local table_name=""
+    table_name=$(echo $sql_code | cut -d" " -f3)
+    echo "$table_name"
+}
+
+if_table_exist() {
+    local table_name=$1
+    if [[ -f  $engine_dir/".db-engine-users"/$loggedInUser/$connected_db/$table_name ]]; then 
+    return 0
+    else
+    return 1
+    fi
+}
+
+extract_column_data() {
+    local sql_code=$1
+    local column_data=""
+    local column_data_without_parenthesis=""
+    column_data=$(echo "$sql_code" | grep -o "(.*)" | sed -e "s/^(//" -e "s/)$//" -e "s/,/\n/g")
+    column_data=$(echo "$column_data" | sed -e "s/^\s*//")
+    echo "$column_data"
+}
+
+extract_column_names(){
+    local column_data=$1
+    local column_names=""
+    column_names=$(awk 'begin {allData = "";FS=" ";}{if (allData == "") {allData=$1}else {allData=allData":"$1}}END {print allData}' <<<$column_data)
+    echo "$column_names"
+}
+
+extract_column_types() {
+    local column_data=$1
+    local column_types=""
+    column_types=$(awk 'begin {allData = "";FS=" ";}{if (allData == "") {allData=$2}else {allData=allData":"$2}}END {print allData}' <<<$column_data)
+    echo "$column_types"
+}
+
+extract_column_Constraints() {
+    local column_data=$1
+    local column_constraints=""
+    column_constraints=$(awk '
+BEGIN {
+    all_date=""
+    constraints[1]="primary key"
+    constraints[2]="unique"
+    constraints[3]="not null"
+    constraints[4]="references"
+    IGNORECASE = 1
+}
+{
+    column_constraints=""
+    for (idx in constraints) {
+        current_constraint_pattern = constraints[idx]
+        # Check if the current line ($0) contains the constraint pattern
+        if ($0 ~ current_constraint_pattern) {
+            if (current_constraint_pattern == "primary key"){
+                column_constraints = column_constraints"pk"
+            }else if (current_constraint_pattern == "not null"){
+                if (column_constraints == ""){
+                    column_constraints = column_constraints"nn"
+                }else {
+                    column_constraints = column_constraints",""nn"
+                }
+            }else {
+            if (column_constraints == ""){
+            column_constraints = column_constraints""current_constraint_pattern
+            }else {
+            column_constraints = column_constraints","current_constraint_pattern 
+            }
+            }
+        }
+        # check if it the first row of the text file add column_constraints to all_date else add ":" and column_constraints    
+    }
+    if (NR == 1) {
+        all_date = column_constraints
+    } else {
+        all_date = all_date ":" column_constraints
+    }
+}
+END {
+    print all_date    
+    }
+' <<< $column_data)
+    echo "$column_constraints"
+}
+
+#============ end helper functions ============
+
+#============ start script body ============
+
+shopt -s nocasematch
+
+ 
+if [[ "$sql_code" =~ $sql_create_regex ]]; then
+
+    table_name=$(get_table_name "$sql_code")
+
+    if if_table_exist "$table_name";then
+    output_error_message "Table $table_name already exists"
+
+    else 
+
+    touch $engine_dir/".db-engine-users"/$loggedInUser/$connected_db/$table_name
+    column_data=$(extract_column_data "$sql_code")
+    column_names=$(extract_column_names "$column_data")
+    column_types=$(extract_column_types "$column_data")
+    column_constraints=$(extract_column_Constraints "$column_data")
+
+    echo $column_names >> $engine_dir/".db-engine-users"/$loggedInUser/$connected_db/$table_name  
+    echo $column_types  >> $engine_dir/".db-engine-users"/$loggedInUser/$connected_db/$table_name
+    echo $column_constraints >> $engine_dir/".db-engine-users"/$loggedInUser/$connected_db/$table_name
+
+    output_success_message "Table $table_name created successfully"
+
+    fi
+
+else
+    output_error_message "syntax Error! Try to enter a valid query"
+fi
+
+shopt -u nocasematch
+
+#============ end script body ============
