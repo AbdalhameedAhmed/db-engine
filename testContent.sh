@@ -1,1 +1,0 @@
-^\s*(create)\s+table\s+[a-zA-Z][a-zA-Z_]*\s*\(\s*[a-zA-Z][a-zA-Z_]*\s+(int|varchar\([1-9][0-9]*\))\s*(\s+primary key|\s+(references\s+[a-zA-Z][a-zA-Z_]*\s+\([a-zA-Z][a-zA-Z_]*\)))?\s*(,\s*[a-zA-Z][a-zA-Z_]*\s+(int|varchar\([1-9][0-9]*\))\s*(\s+primary key|\s+(references\s+[a-zA-Z][a-zA-Z_]*\s+\([a-zA-Z][a-zA-Z_]*\)))?\s*)*\)$

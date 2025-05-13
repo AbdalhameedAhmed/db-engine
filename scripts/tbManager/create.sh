@@ -4,8 +4,8 @@
 
 check_name_validity='[a-zA-Z][a-zA-Z_]*'
 check_column_type='(int|varchar\([1-9][0-9]*\))'
-check_constraint="(\s+primary key|(\s+(references\s+[a-zA-Z][a-zA-Z_]*\s*\([a-zA-Z][a-zA-Z_]*\))|\s+unique|\s+not null)*)"
-sql_create_regex="^\s*(create)\s+table\s+${check_name_validity}\s*\(\s*${check_name_validity}\s+${check_column_type}\s*${check_constraint}?\s*(,\s*${check_name_validity}\s+${check_column_type}\s*${check_constraint}?\s*)*\)$"
+check_constraint="(\s+primary key|\s+(references\s+[a-zA-Z][a-zA-Z_]*\s+\([a-zA-Z][a-zA-Z_]*\))|(\s+unique|\s+not null)*)"
+sql_create_regex="^\s*create\s+table\s+${check_name_validity}\s*\(\s*${check_name_validity}\s+${check_column_type}\s*${check_constraint}?\s*(,\s*${check_name_validity}\s+${check_column_type}\s*${check_constraint}?\s*)*\)$"
 
 #============ end global variables ============
 
@@ -50,6 +50,78 @@ extract_column_types() {
     echo "$column_types"
 }
 
+check_repeated_column_names() {
+ local column_data=$1
+    local column_names=""
+    column_names=$(awk '{print $1}' <<< "$column_data")
+
+    local -a lines       # Declare 'lines' as a local array
+    local old_ifs="$IFS" # Save the current Internal Field Separator
+    IFS=$'\n'            # Set IFS to newline for the 'read' command
+    read -d '' -r -a lines <<< "$column_names" # Populate the 'lines' array
+    IFS="$old_ifs"       # Restore the original IFS
+
+    local -a seen=()     # Declare 'seen' as a local array, good practice
+    local line           # Declare 'line' as a local variable for the loop
+    for line in "${lines[@]}"; do
+        if [[ " ${seen[*]} " =~ " ${line} " ]]; then
+            return 0
+        else
+            seen+=("$line")
+        fi
+    done
+    return 1
+}
+
+check_repeated_constraints() {
+  local fullText="$1"
+  local primary_count=0 
+  while IFS= read -r line; do
+    [[ -z "$line" ]] && continue
+
+    local -a words
+    local word
+    local IFS=' '
+
+    local not_count=0
+    local null_count=0
+    local unique_count=0
+
+    words=($line) # Split the line into an array of words
+
+    for word in "${words[@]}"; do
+      case "$word" in
+        "primary")
+          ((primary_count++))
+          if [[ "$primary_count" -gt 1 ]]; then
+            return 0 
+          fi
+          ;;
+        "not")
+          ((not_count++))
+          if [[ "$not_count" -gt 1 ]]; then
+            return 0 
+          fi
+          ;;
+        "null")
+          ((null_count++))
+          if [[ "$null_count" -gt 1 ]]; then
+            return 0
+          fi
+          ;;
+        "unique")
+          ((unique_count++))
+          if [[ "$unique_count" -gt 1 ]]; then
+            return 0 
+          fi
+          ;;
+      esac
+    done
+  done <<< "$fullText" # Corrected: use here-string to pass variable content
+
+  return 1 # Return 0 (success/no repetition)
+}
+
 extract_column_Constraints() {
     local column_data=$1
     local column_constraints=""
@@ -76,7 +148,20 @@ BEGIN {
                 }else {
                     column_constraints = column_constraints",""nn"
                 }
-            }else {
+            }else if (current_constraint_pattern == "references") {
+            split($0, arr, " ");
+            table_name = arr[4]
+            col_name = arr[5]
+            sub(/\(/, "",col_name)
+            sub(/\)/, "",col_name)
+                if (column_constraints == ""){
+                    column_constraints = column_constraints"fk"
+                }else {
+                    column_constraints = column_constraints":fk"
+                }
+            column_constraints = column_constraints","table_name","col_name
+            }
+            else {
             if (column_constraints == ""){
             column_constraints = column_constraints""current_constraint_pattern
             }else {
@@ -111,22 +196,24 @@ if [[ "$sql_code" =~ $sql_create_regex ]]; then
     table_name=$(get_table_name "$sql_code")
 
     if if_table_exist "$table_name";then
-    output_error_message "Table $table_name already exists"
-
+        output_error_message "Table $table_name already exists"
     else 
-
-    touch $engine_dir/".db-engine-users"/$loggedInUser/$connected_db/$table_name
-    column_data=$(extract_column_data "$sql_code")
-    column_names=$(extract_column_names "$column_data")
-    column_types=$(extract_column_types "$column_data")
-    column_constraints=$(extract_column_Constraints "$column_data")
-
-    echo $column_names >> $engine_dir/".db-engine-users"/$loggedInUser/$connected_db/$table_name  
-    echo $column_types  >> $engine_dir/".db-engine-users"/$loggedInUser/$connected_db/$table_name
-    echo $column_constraints >> $engine_dir/".db-engine-users"/$loggedInUser/$connected_db/$table_name
-
-    output_success_message "Table $table_name created successfully"
-
+        column_data=$(extract_column_data "$sql_code")
+        if check_repeated_column_names "$column_data";then
+        output_error_message "Repeated Column Names! Try to enter a valid query"
+        elif check_repeated_constraints "$column_data";then
+        output_error_message "Repeated Constraints! Try to enter a valid query"
+        else
+            touch $engine_dir/".db-engine-users"/$loggedInUser/$connected_db/$table_name
+            column_names=$(extract_column_names "$column_data")
+            column_types=$(extract_column_types "$column_data")
+            column_constraints=$(extract_column_Constraints "$column_data")
+            echo $column_names >> $engine_dir/".db-engine-users"/$loggedInUser/$connected_db/$table_name  
+            echo $column_types  >> $engine_dir/".db-engine-users"/$loggedInUser/$connected_db/$table_name
+            echo $column_constraints >> $engine_dir/".db-engine-users"/$loggedInUser/$connected_db/$table_name
+            output_success_message "Table $table_name created successfully"
+        fi
+        
     fi
 
 else
