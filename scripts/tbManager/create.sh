@@ -5,7 +5,7 @@
 check_name_validity='[a-zA-Z][a-zA-Z_]*'
 check_column_type='(int|varchar\([1-9][0-9]*\))'
 check_constraint="(\s+primary key|\s+(references\s+[a-zA-Z][a-zA-Z_]*\s+\([a-zA-Z][a-zA-Z_]*\))|(\s+unique|\s+not null)*)"
-sql_create_regex="^\s*create\s+table\s+${check_name_validity}\s*\(\s*${check_name_validity}\s+${check_column_type}\s*${check_constraint}?\s*(,\s*${check_name_validity}\s+${check_column_type}\s*${check_constraint}?\s*)*\)$"
+sql_create_regex="^\s*create\s+table\s+${check_name_validity}\s+\(\s*${check_name_validity}\s+${check_column_type}\s*${check_constraint}?\s*(,\s*${check_name_validity}\s+${check_column_type}\s*${check_constraint}?\s*)*\)$"
 
 #============ end global variables ============
 
