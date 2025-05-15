@@ -21,3 +21,16 @@ if_table_exist() {
     return 1
     fi
 }
+
+remove_extra_spaces() {
+    local text="$1"
+    text=$(echo "$text" | sed -e 's/\s\+/ /g')
+    echo "$text"
+}
+
+split_string_to_array() {
+  local text="$1"
+  local delimiter="$2"
+  local array_name="$3"
+  IFS="$delimiter" read -ra "$array_name" < <(printf %s "$text")
+}
