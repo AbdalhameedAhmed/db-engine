@@ -13,6 +13,9 @@ while true ; do
         "create")
             source $script_dir/scripts/tbManager/create.sh
             ;;
+        "insert")
+            source $script_dir/scripts/tbManager/insert.sh
+            ;;
     esac
 
 done

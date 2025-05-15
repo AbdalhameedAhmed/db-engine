@@ -18,15 +18,6 @@ get_table_name() {
     echo "$table_name"
 }
 
-if_table_exist() {
-    local table_name=$1
-    if [[ -f  $engine_dir/".db-engine-users"/$loggedInUser/$connected_db/$table_name ]]; then 
-    return 0
-    else
-    return 1
-    fi
-}
-
 extract_column_data() {
     local sql_code=$1
     local column_data=""

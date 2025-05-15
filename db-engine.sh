@@ -15,6 +15,8 @@ PS3='Login/Register:'
 
 #============ start helper functions ============
 
+source $script_dir/scripts/helperFunctions.sh
+
 add_passwd_file() {
     if [[ ! -f "$script_dir/scripts/auth/passwd" ]] ; then
         touch "$script_dir/scripts/auth/passwd"
@@ -50,17 +52,6 @@ set_allowed_auth_options() {
     done
 }
 
-output_success_message() {
-    local green='\033[0;32m'
-    local normal='\033[0m'
-    echo -e "${green}$1${normal}"
-}
-
-output_error_message() {
-    local red='\033[0;31m'
-    local normal='\033[0m'
-    echo -e "${red}$1${normal}"
-}
 #============ end helper functions ============
 
 #============ start script body ============
