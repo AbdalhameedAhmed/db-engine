@@ -5,6 +5,7 @@ group_of_cols_regex="\(\s*(${check_name_validity}\s*(,\s*${check_name_validity})
 group_of_values_regex="\(\s*(([1-9][0-9]*|'[^']*')(\s*,\s*([1-9][0-9]*|'[^']*'))*)\s*\)"
 sql_insert_regex="\s*insert\s+into\s*([a-zA-Z][a-zA-Z_]*)\s*${group_of_cols_regex}\s*values\s*${group_of_values_regex}"
 
+# insert into tableName (first_name,last_name) values ('qwe','qweq')
 #============ end global variables ============
 
 #============ start helper functions ============
