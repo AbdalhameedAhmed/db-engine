@@ -10,6 +10,6 @@
 # IFS=":" 
 # read -r -a my_array <<< "$my_data"
 # print_array my_array
-
-xd="hello world"
-echo "${#xd}"
+num="1"
+xd=$(cat /home/turbo/.db-engine-users/ahmed/t/iti | cut -d : -f $num)
+echo "${xd}"
