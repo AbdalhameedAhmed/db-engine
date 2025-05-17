@@ -24,6 +24,9 @@ while true ; do
             source $script_dir/scripts/tbManager/select.sh
             ;;
 
+        "delete")
+            source $script_dir/scripts/tbManager/delete.sh
+            ;;
         
     esac
 

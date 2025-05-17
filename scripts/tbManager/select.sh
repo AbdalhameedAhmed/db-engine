@@ -67,6 +67,7 @@ if [[ "$sql_code" =~ $select_regex ]]; then
         declare -a condition_column_array=()
         condition_column_array+=("$where_left_value")
 
+        # check if the column in the condition is exist in the table
         if ! check_all_columns_exist condition_column_array table_cols_array ;then
             output_error_message "Column '$where_left_value' in the where condition does not exist in table $table_name, Try to enter a valid query"
             return
