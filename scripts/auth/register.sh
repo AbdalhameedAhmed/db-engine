@@ -21,7 +21,7 @@ hash_password() {
 # check if user exists
 user_exists() {
     local username="$1"
-    local result=$(grep "^$username:" "$script_dir/scripts/auth/passwd")
+    local result=$(grep "^$username:" "$engine_dir/.db-engine-users/.passwd")
     if [[ -n $result ]]; then
         return 0
     else
@@ -34,7 +34,7 @@ add_new_user() {
     local username="$1"
     local password=$(hash_password "$2")
     local userData="$username:$password"
-    echo "$userData" >> "$script_dir/scripts/auth/passwd"
+    echo "$userData" >> "$engine_dir/.db-engine-users/.passwd"
     echo
     output_success_message "$username registered successfully"
     echo

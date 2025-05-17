@@ -18,21 +18,20 @@ PS3='Login/Register:'
 source $script_dir/scripts/helpers/helperFunctions.sh
 source $script_dir/scripts/helpers/draw_data.sh
 
-
-add_passwd_file() {
-    if [[ ! -f "$script_dir/scripts/auth/passwd" ]] ; then
-        touch "$script_dir/scripts/auth/passwd"
-    fi
-}
-
 add_users_dir(){
     if [[ ! -d "$engine_dir/.db-engine-users" ]] ; then
         mkdir "$engine_dir/.db-engine-users"
     fi
 }
 
+add_passwd_file() {
+    if [[ ! -f "$engine_dir/.db-engine-users/.passwd" ]] ; then
+        touch "$engine_dir/.db-engine-users/.passwd"
+    fi
+}
+
 get_users() {
-    usersContent=$(cat "$script_dir/scripts/auth/passwd")
+    usersContent=$(cat "$engine_dir/.db-engine-users/.passwd")
 }
 
 set_allowed_auth_options() {
@@ -58,11 +57,11 @@ set_allowed_auth_options() {
 
 #============ start script body ============
 
-# ensure that the passwd file exists
-add_passwd_file
-
 # ensure that the users directory exists
 add_users_dir
+
+# ensure that the passwd file exists
+add_passwd_file
 
 while true; do
 

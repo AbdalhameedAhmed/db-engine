@@ -18,7 +18,7 @@ hash_password() {
 
 get_user_info() {
     local username="$1"
-    local result=$(grep "^$username:" "$script_dir/scripts/auth/passwd")
+    local result=$(grep "^$username:" "$engine_dir/.db-engine-users/.passwd")
     echo $result
 }
 
