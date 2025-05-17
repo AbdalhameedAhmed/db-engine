@@ -16,6 +16,8 @@ PS3='Login/Register:'
 #============ start helper functions ============
 
 source $script_dir/scripts/helperFunctions.sh
+source $script_dir/scripts/helpers/draw_data.sh
+
 
 add_passwd_file() {
     if [[ ! -f "$script_dir/scripts/auth/passwd" ]] ; then

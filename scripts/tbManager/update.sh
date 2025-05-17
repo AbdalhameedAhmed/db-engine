@@ -27,23 +27,6 @@ for line in "${text_arr[@]}"; do
 done
 }
 
-print_condition_data_type_errors() {
-
-    local error_code="$1"
-    local table_name="$2"
-    local column_name="$3"
-    local column_value="$4"
-    local data_type="$5"
-    case $error_code in
-    "1")
-        output_error_message "Data type mismatch in the where condition for column '$column_name'. Value '${column_value}' is not a valid integer."
-    ;;
-    "3")
-        output_error_message "Value for column '$column_name' (${column_value}) must be a string enclosed in single quotes for type '$data_type'."
-    ;;
-    esac
-}
-
 #============ end helper functions ============
 
 #============ start script body ============
@@ -66,6 +49,9 @@ if [[ "$sql_code" =~ $update_regex ]]; then
     table_cols=$(sed -n '1p' $engine_dir/".db-engine-users"/$loggedInUser/$connected_db/$table_name)
     table_data_types=$(sed -n '2p' $engine_dir/".db-engine-users"/$loggedInUser/$connected_db/$table_name)
     table_constraints=$(sed -n '3p' $engine_dir/".db-engine-users"/$loggedInUser/$connected_db/$table_name)
+    declare -a table_cols_array=()
+    declare -a table_data_types_array=()
+    declare -a table_constraints_array=()
     split_string_to_array "$table_cols" ":" table_cols_array
     split_string_to_array "$table_data_types" ":" table_data_types_array
     split_string_to_array "$table_constraints" ":" table_constraints_array

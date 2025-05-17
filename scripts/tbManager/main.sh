@@ -19,6 +19,11 @@ while true ; do
         "update")
             source $script_dir/scripts/tbManager/update.sh
             ;;
+
+        "select")
+            source $script_dir/scripts/tbManager/select.sh
+            ;;
+
         
     esac
 

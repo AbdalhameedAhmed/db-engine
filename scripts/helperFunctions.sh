@@ -231,3 +231,21 @@ print_constraints_errors() {
     esac
     
 }
+
+
+print_condition_data_type_errors() {
+
+    local error_code="$1"
+    local table_name="$2"
+    local column_name="$3"
+    local column_value="$4"
+    local data_type="$5"
+    case $error_code in
+    "1")
+        output_error_message "Data type mismatch in the where condition for column '$column_name'. Value ${column_value} is not a valid integer."
+    ;;
+    "3")
+        output_error_message "Value for column '$column_name' (${column_value}) must be a string enclosed in single quotes for type '$data_type'."
+    ;;
+    esac
+}
