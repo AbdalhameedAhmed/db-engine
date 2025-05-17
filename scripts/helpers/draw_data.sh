@@ -5,6 +5,7 @@
 #   1. Table Title (string)
 #   2. Array of Column Headers (passed by name reference)
 #   3. Array of Records (passed by name reference, each record is a colon-separated string)
+
 print_dynamic_table() {
     local table_title="$1"
     local -n header_arr_ref="$2"
@@ -113,24 +114,3 @@ print_dynamic_table() {
 
     echo "$separator_line"
 }
-
-# Main script logic for listing databases
-# allDbs_raw=$(ls -F "/home/turbo/.db-engine-users/$loggedInUser" | grep '/$' | sed 's/\/$//' 2>/dev/null)
-
-# declare -a headers=("No." "Database Name")
-# declare -a records=()
-
-# if [ -n "$allDbs_raw" ]; then # Check if ls found any potential directories
-#   counter=0
-#   while IFS= read -r db_name; do
-#     if [ -n "$db_name" ]; then # Process only non-empty lines from allDbs
-#       counter=$((counter + 1))
-#       records+=("${counter}:${db_name}") # Format: "1:db_name_1", "2:db_name_2", etc.
-#     fi
-#   done <<< "$allDbs_raw" # Feed the content of allDbs_raw to the loop
-# fi
-
-# Call the dynamic table printing function.
-# The function itself will handle the case where 'records' is empty by printing "No records to display."
-# within the table structure.
-# print_dynamic_table "Databases Listed" headers records
