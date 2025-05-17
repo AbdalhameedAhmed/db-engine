@@ -16,12 +16,14 @@ local -n l_arr="$3"
 text=$(echo "$text" | grep -oP "[a-zA-Z][a-zA-Z_]*\s*=\s*([1-9][0-9]*|'[^']*'|null)")
 IFS=$'\n'
 read -d '' -r -a text_arr <<< "$text" 
+counter=0
 for line in "${text_arr[@]}"; do
     line=$(echo "$line" | sed 's/\s*=\s*/=/1')
     col_name=$(echo "$line" | cut -d '=' -f 1)
     col_val=$(echo "$line" | cut -d '=' -f 2)
-    f_arr+="$col_name"
-    l_arr+="$col_val"    
+    f_arr[$counter]="$col_name"
+    l_arr[$counter]="$col_val"    
+    ((counter++))
 done
 }
 
@@ -54,11 +56,7 @@ if [[ "$sql_code" =~ $update_regex ]]; then
     values_to_update="${BASH_REMATCH[2]}"
     where_condition="${BASH_REMATCH[7]}"
     condition_operator="${BASH_REMATCH[8]}"
-    where_condition=$(echo "$where_condition" | sed 's/\s*'"$condition_operator"'\s*/'"$condition_operator"'/')
-    where_left_value=$(echo "$where_condition" | cut -d$condition_operator -f1)
-    where_right_value=$(echo "$where_condition" | cut -d$condition_operator -f2)
     
-
     # check if the table exists
     if ! if_table_exist "$table_name" ;then
         output_error_message "Table $table_name does not exist"
@@ -83,7 +81,6 @@ if [[ "$sql_code" =~ $update_regex ]]; then
     fi
     
     # check if all columns exist in table
-    echo "${syntax_col_names_arr[@]}"
     if ! check_all_columns_exist syntax_col_names_arr table_cols_array ;then
         output_error_message "Some columns does not exist in table $table_name, Try to enter a valid query"
         return
@@ -116,33 +113,40 @@ if [[ "$sql_code" =~ $update_regex ]]; then
 
     done
 
-    condition_column_array=()
-    condition_column_array+=("$where_left_value")
-    # check if the column in the condition is exist in the table
-    if ! check_all_columns_exist condition_column_array table_cols_array ;then
-        output_error_message "Column '$where_left_value' in the where condition does not exist in table $table_name, Try to enter a valid query"
-        return
-    fi 
+    # condition part
+    if [[ -n "$where_condition" ]];then
 
-    # check the validity of data type in the where condition
-    where_column_order=$(get_column_order "$where_left_value" table_cols_array)
-    ((where_column_order--))
-    where_column_data_type="${table_data_types_array[${where_column_order}]}"
-    valid_data_type "$where_left_value" "$where_right_value" "$where_column_data_type"
-    validation_error_code=$?
-    if [[ "$validation_error_code" -ne 0 ]]; then 
-        print_condition_data_type_errors "$validation_error_code" "$table_name" "$where_left_value" "$where_right_value" "$where_column_data_type" 
-        return
+        where_condition=$(echo "$where_condition" | sed 's/\s*'"$condition_operator"'\s*/'"$condition_operator"'/')
+        where_left_value=$(echo "$where_condition" | cut -d$condition_operator -f1)
+        where_right_value=$(echo "$where_condition" | cut -d$condition_operator -f2)
+        declare -a condition_column_array=()
+        condition_column_array+=("$where_left_value")
+        # check if the column in the condition is exist in the table
+        if ! check_all_columns_exist condition_column_array table_cols_array ;then
+            output_error_message "Column '$where_left_value' in the where condition does not exist in table $table_name, Try to enter a valid query"
+            return
+        fi 
+
+        # check the validity of data type in the where condition
+        where_column_order=$(get_column_order "$where_left_value" table_cols_array)
+        ((where_column_order--))
+        where_column_data_type="${table_data_types_array[${where_column_order}]}"
+        valid_data_type "$where_left_value" "$where_right_value" "$where_column_data_type"
+        validation_error_code=$?
+        if [[ "$validation_error_code" -ne 0 ]]; then 
+            print_condition_data_type_errors "$validation_error_code" "$table_name" "$where_left_value" "$where_right_value" "$where_column_data_type" 
+            return
+        fi
+
+        # check the validity of the comparison operator
+        if [[ "$where_column_data_type" != "int" ]] && [[ "$condition_operator" != "=" && "$condition_operator" != "!=" ]] ;then
+            output_error_message "Invalid condition operator '$condition_operator' for non-integer data type '$where_column_data_type'. Only '=' or '!=' are allowed."
+            return
+        fi
+
     fi
 
-    # check the validity of the comparison operator
-    if [[ "$where_column_data_type" != "int" ]] && [[ "$condition_operator" != "=" && "$condition_operator" != "!=" ]] ;then
-        output_error_message "Invalid condition operator '$condition_operator' for non-integer data type '$where_column_data_type'. Only '=' or '!=' are allowed."
-        return
-    fi
-
-    # start update data in the table
-    
+    # start update data in the table    
     temp_file_path=$engine_dir/".db-engine-users"/$loggedInUser/$connected_db/${table_name}.temp
     table_file_path=$engine_dir/".db-engine-users"/$loggedInUser/$connected_db/$table_name
 
@@ -162,7 +166,8 @@ if [[ "$sql_code" =~ $update_regex ]]; then
     for table_content_line in "${table_content_arr[@]}"; do
         table_line_condition_value=$(echo "$table_content_line" | cut -d : -f $where_column_order_num)
         split_string_to_array "$table_content_line" ":" line_arr
-        if [[ "$condition_operator" == "=" && "$table_line_condition_value" == "$where_right_value" ]] ||
+        if [[ -z "$where_condition" ]] || 
+        [[ "$condition_operator" == "=" && "$table_line_condition_value" == "$where_right_value" ]] ||
         [[ "$condition_operator" == "!=" && "$table_line_condition_value" != "$where_right_value" ]] ||
         [[ "$condition_operator" == ">" && "$table_line_condition_value" -gt "$where_right_value" ]] ||
         [[ "$condition_operator" == "<" && "$table_line_condition_value" -lt "$where_right_value" ]]; then
