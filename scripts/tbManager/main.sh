@@ -27,6 +27,14 @@ while true ; do
         "delete")
             source $script_dir/scripts/tbManager/delete.sh
             ;;
+
+        "drop")
+            source $script_dir/scripts/tbManager/drop.sh
+            ;;
+
+        "ls")
+            source $script_dir/scripts/tbManager/list.sh
+            ;;
         
     esac
 
