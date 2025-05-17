@@ -16,6 +16,10 @@ while true ; do
         "insert")
             source $script_dir/scripts/tbManager/insert.sh
             ;;
+        "update")
+            source $script_dir/scripts/tbManager/update.sh
+            ;;
+        
     esac
 
 done
