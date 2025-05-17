@@ -64,37 +64,35 @@ add_passwd_file
 # ensure that the users directory exists
 add_users_dir
 
-source $script_dir/scripts/dbManager/main.sh
+while true; do
 
-# while true; do
+set_allowed_auth_options
 
-# set_allowed_auth_options
+    select mode in "${allowed_auth_options[@]}" ; do
+        case $mode in
+            "Login")
+            # login scenario
+                source $script_dir/scripts/auth/login.sh
+                break
+                ;;
+            "Create new user")
+            # register scenario
+                source $script_dir/scripts/auth/register.sh
+                break
+                ;;
+            "Exit")
+                exit
+                ;;
+            *) 
+            echo
+            output_error_message "invalid option $REPLY"
+            echo
+            break
+            ;;
+        esac
 
-#     select mode in "${allowed_auth_options[@]}" ; do
-#         case $mode in
-#             "Login")
-#             # login scenario
-#                 source $script_dir/scripts/auth/login.sh
-#                 break
-#                 ;;
-#             "Create new user")
-#             # register scenario
-#                 source $script_dir/scripts/auth/register.sh
-#                 break
-#                 ;;
-#             "Exit")
-#                 exit
-#                 ;;
-#             *) 
-#             echo
-#             output_error_message "invalid option $REPLY"
-#             echo
-#             break
-#             ;;
-#         esac
+    done
 
-#     done
-
-# done
+done
 
 #============ end script body ============
