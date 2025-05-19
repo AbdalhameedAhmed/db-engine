@@ -8,10 +8,6 @@ select_regex="\s*select\s+(\*|${check_name_validity}(\s*,\s*${check_name_validit
 
 #============ start global variables ============
 
-#============ start helper functions ============
-
-#============ end helper functions ============
-
 #============ start script body ============
 
 shopt -s nocasematch

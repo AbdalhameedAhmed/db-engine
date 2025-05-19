@@ -17,9 +17,12 @@ if [[ "$sql_code" =~ $sql_insert_regex ]]; then
     table_name="${BASH_REMATCH[1]}"
     columns="${BASH_REMATCH[2]}"
     values="${BASH_REMATCH[4]}"
+    columns=$(echo "$columns" | sed -e 's/\s*,\s*/,/g')
+    values=$(echo "$values" | sed -e 's/\s*,\s*/,/g')
+    declare -a columns_array=()
+    declare -a values_array=()
     split_string_to_array "$columns" "," columns_array
     split_string_to_array "$values" "," values_array
-
     # check if table exists
     if ! if_table_exist "$table_name" ;then
         output_error_message "Table $table_name does not exist"
@@ -43,11 +46,13 @@ if [[ "$sql_code" =~ $sql_insert_regex ]]; then
     # check if all columns exist in table
     if ! check_all_columns_exist columns_array table_cols_array ;then
         output_error_message "Some columns does not exist in table $table_name"
+        return
     fi
 
     # check if repeated column names
     if check_repeated_column_names columns_array ;then
         output_error_message "Repeated Column Names! Try to enter a valid query"
+        return
     fi
 
     new_insert_data=""
