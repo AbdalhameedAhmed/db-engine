@@ -175,6 +175,55 @@ END {
     echo "$column_constraints"
 }
 
+is_valid_fk_column() {
+    local table_name="$1"
+    local column_name="$2"
+    local table_cols=$(sed -n '1p' $engine_dir/".db-engine-users"/$loggedInUser/$connected_db/$table_name)
+    local table_constraints=$(sed -n '3p' $engine_dir/".db-engine-users"/$loggedInUser/$connected_db/$table_name)
+    declare -a table_cols_array=()
+    declare -a table_constraints_array=()
+    split_string_to_array "$table_cols" ":" table_cols_array
+    split_string_to_array "$table_constraints" ":" table_constraints_array
+
+    # check if the column exists in the table
+    declare -a syntax_col_names_arr=("$column_name")
+
+    if ! check_all_columns_exist syntax_col_names_arr table_cols_array ;then
+        output_error_message "Invalid Foreign Key! Column $column_name does not exist in table $table_name"
+        return 1
+    fi
+
+    local column_order=$(get_column_order "$column_name" table_cols_array)
+    ((column_order--))
+    # check if the column is a primary key
+    if [[ "${table_constraints_array[${column_order}]}" == "pk" ]] ;then 
+    return 0
+    else 
+    output_error_message "Invalid Foreign Key! Column $column_name is not a primary key"
+    return 1
+    fi
+}
+
+is_valid_fk() {
+    local column_constraints="$1"
+    local foreign_key_regex="\s*fk\s*,\s*([a-zA-Z][a-zA-Z_]*)\s*,\s*([a-zA-Z][a-zA-Z_]*)"
+    IFS=':'
+    read -r -a constraints_array <<< "$column_constraints"
+    for constraint_line in "${constraints_array[@]}"; do
+        if [[ "$constraint_line" =~ $foreign_key_regex ]]; then
+        local table_name="${BASH_REMATCH[1]}"
+        local column_name="${BASH_REMATCH[2]}"
+            if ! if_table_exist "$table_name" ; then 
+            output_error_message "Invalid Foreign Key! Table $table_name does not exist"
+            return 1
+            elif ! is_valid_fk_column "$table_name" "$column_name";then
+            return 1
+            fi      
+        fi
+    done
+    return 0
+}
+
 #============ end helper functions ============
 
 #============ start script body ============
@@ -195,13 +244,16 @@ if [[ "$sql_code" =~ $sql_create_regex ]]; then
         elif check_repeated_constraints "$column_data";then
         output_error_message "Repeated Constraints! Try to enter a valid query"
         else
+            table_column_names=$(extract_column_names "$column_data")
+            table_column_types=$(extract_column_types "$column_data")
+            table_column_constraints=$(extract_column_Constraints "$column_data")
+            if ! is_valid_fk "$column_constraints" ; then 
+            return 
+            fi
             touch $engine_dir/".db-engine-users"/$loggedInUser/$connected_db/$table_name
-            column_names=$(extract_column_names "$column_data")
-            column_types=$(extract_column_types "$column_data")
-            column_constraints=$(extract_column_Constraints "$column_data")
-            echo $column_names >> $engine_dir/".db-engine-users"/$loggedInUser/$connected_db/$table_name  
-            echo $column_types  >> $engine_dir/".db-engine-users"/$loggedInUser/$connected_db/$table_name
-            echo $column_constraints >> $engine_dir/".db-engine-users"/$loggedInUser/$connected_db/$table_name
+            echo "$table_column_names" >> $engine_dir/".db-engine-users"/$loggedInUser/$connected_db/$table_name  
+            echo "$table_column_types"  >> $engine_dir/".db-engine-users"/$loggedInUser/$connected_db/$table_name
+            echo "$table_column_constraints" >> $engine_dir/".db-engine-users"/$loggedInUser/$connected_db/$table_name
             output_success_message "Table $table_name created successfully"
         fi
         

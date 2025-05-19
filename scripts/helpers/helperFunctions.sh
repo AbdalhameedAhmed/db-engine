@@ -168,6 +168,7 @@ valid_constraints(){
     local column_value="$2"
     local constraints="$3"
     local -n local_column_names_array="$4"
+    local foreign_key_regex="\s*fk\s*,\s*([a-zA-Z][a-zA-Z_]*)\s*,\s*([a-zA-Z][a-zA-Z_]*))"
 
     if [[ "$constraints" == "pk" ]]; then 
         if [[ "$column_value" == "null" ]];then
@@ -177,7 +178,8 @@ valid_constraints(){
         else
             return 0
         fi
-    elif [[ "$constraints" =~ fk.+ ]];then
+    elif [[ "$constraints" =~ $foreign_key_regex ]];then
+        
         return 0
     else
         split_string_to_array "$constraints" "," constraints_array
