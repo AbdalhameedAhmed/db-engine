@@ -1,12 +1,11 @@
 #============ start global variables ============
 
 check_name_validity='[a-zA-Z][a-zA-Z_]*'
-group_of_cols_regex="\(\s*(${check_name_validity}\s*(,\s*${check_name_validity})*)\s*\)"
+group_of_cols_regex="\(\s*(${check_name_validity}\s*(\s*,\s*${check_name_validity})*)\s*\)"
 group_of_values_regex="\(\s*(([1-9][0-9]*|'[^']*'|null)(\s*,\s*([1-9][0-9]*|'[^']*'|null))*)\s*\)"
 sql_insert_regex="\s*insert\s+into\s*([a-zA-Z][a-zA-Z_]*)\s*${group_of_cols_regex}\s*values\s*${group_of_values_regex}"
 
 #============ end global variables ============
-
 #============ start script body ============
 
 shopt -s nocasematch
@@ -60,7 +59,7 @@ if [[ "$sql_code" =~ $sql_insert_regex ]]; then
     table_column_counter=0
     for table_col in "${table_cols_array[@]}" ; do
         catched_value="null"
-        fount_value="false"
+        found_value="false"
         col_counter=0
         for column in "${columns_array[@]}" ; do
             if [[ "$table_col" == "$column" ]]; then
@@ -89,16 +88,19 @@ if [[ "$sql_code" =~ $sql_insert_regex ]]; then
                 fi
 
                 catched_value="${values_array[${col_counter}]}"
-                fount_value="true"
+                found_value="true"
                 break 
             fi
             ((col_counter++))
 
         done;
 
-        if [[ "$fount_value" == "false" && "$has_error" == "false" ]]; then
-            if ! valid_constraints "$table_col" "$catched_value" "${table_constraints_array[${col_counter}]}" table_cols_array; then
-              has_error="true"  
+        if [[ "$found_value" == "false" && "$has_error" == "false" ]]; then
+            valid_constraints "$table_col" "$catched_value" "${table_constraints_array[${col_counter}]}" table_cols_array
+            constraint_error_code=$?
+            if [[ "$constraint_error_code" -ne 0 ]] ;then
+            print_constraints_errors $constraint_error_code "$table_col" "${values_array[${col_counter}]}"
+            has_error="true"  
             fi
         fi
 
