@@ -277,3 +277,28 @@ print_condition_data_type_errors() {
     ;;
     esac
 }
+
+
+get_table_child() {
+    local fk_reference_table=$1
+    local foreign_key_regex="\s*fk\s*,\s*([a-zA-Z][a-zA-Z_]*)\s*,\s*([a-zA-Z][a-zA-Z_]*)"
+    all_tables=$(ls -F "$engine_dir/.db-engine-users/$loggedInUser/$connected_db" | grep -v '/$' 2>/dev/null)
+    while IFS= read -r table_name; do
+        if [ -n "$table_name" ] && [[ "$table_name" != "$fk_reference_table" ]]; then 
+            local table_constraints=$(sed -n '3p' $engine_dir/".db-engine-users"/$loggedInUser/$connected_db/$table_name)
+            declare -a constraints_array
+            split_string_to_array "$table_constraints" ":" constraints_array
+            for constraint in "${constraints_array[@]}"; do
+                if [[ "$constraint" =~ $foreign_key_regex ]]; then
+                    local fk_table_name="${BASH_REMATCH[1]}"
+                    if [[ "$fk_table_name" == "$fk_reference_table" ]]; then
+                        echo "$table_name"
+                        return
+                    fi
+                fi
+            done
+        fi
+    done <<< "$all_tables"
+    echo ""
+    return
+}
