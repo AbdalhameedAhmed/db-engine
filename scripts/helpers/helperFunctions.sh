@@ -163,13 +163,31 @@ check_is_nn() {
     fi
 }
 
-valid_constraints(){
-    local column_name="$1"
-    local column_value="$2"
-    local constraints="$3"
-    local -n local_column_names_array="$4"
-    local foreign_key_regex="\s*fk\s*,\s*([a-zA-Z][a-zA-Z_]*)\s*,\s*([a-zA-Z][a-zA-Z_]*))"
+check_is_valid_fk_value() {
+    local fk_reference_table=$1
+    local fk_reference_column=$2
+    local fk_value=$3
+    local reference_table_columns=$(sed -n '1p' $engine_dir/".db-engine-users"/$loggedInUser/$connected_db/$fk_reference_table)
+    split_string_to_array "$table_cols" ":" fk_table_cols_array
+    local pk_column_order=$(get_column_order "$fk_reference_column" fk_table_cols_array)
+    local table_data=$(tail -n +4 $engine_dir/".db-engine-users"/$loggedInUser/$connected_db/$fk_reference_table | cut -d : -f $pk_column_order)
+    local -a record_arr=()
+    IFS=$'\n'
+    read -d '' -r -a record_arr <<< "$table_data"
+    for line in "${record_arr[@]}"; do
+        if [[ "$line" == "$fk_value" ]]; then
+            return 0
+        fi
+    done
+    return 1
+}
 
+valid_constraints(){
+    local column_name=$1
+    local column_value=$2
+    local constraints=$3
+    local -n local_column_names_array="$4"
+    local foreign_key_regex="\s*fk\s*,\s*([a-zA-Z][a-zA-Z_]*)\s*,\s*([a-zA-Z][a-zA-Z_]*)"
     if [[ "$constraints" == "pk" ]]; then 
         if [[ "$column_value" == "null" ]];then
             return 1
@@ -179,8 +197,13 @@ valid_constraints(){
             return 0
         fi
     elif [[ "$constraints" =~ $foreign_key_regex ]];then
-        
+        local fk_table_name="${BASH_REMATCH[1]}"
+        local fk_column_name="${BASH_REMATCH[2]}"
+        if ! check_is_valid_fk_value "$fk_table_name" "$fk_column_name" "$column_value" ; then 
+        return 6
+        else
         return 0
+        fi
     else
         split_string_to_array "$constraints" "," constraints_array
         for constraint in "${constraints_array[@]}"; do
@@ -229,6 +252,9 @@ print_constraints_errors() {
     ;;
     "5")
         output_error_message "Unique constraint violated for column $column_name. Value '$column_value' already exists."
+    ;;
+    "6")
+        output_error_message "Foreign key constraint violated for column '$column_name'. Value '$column_value' does not exist in the referenced table as a primary key."
     ;;
     esac
     
