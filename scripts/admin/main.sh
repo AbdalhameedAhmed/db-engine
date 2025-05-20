@@ -37,10 +37,10 @@ while [[ -z "$admin_logout" ]] ; do
                 break
             ;;
 
-            # "List users")
-            #     source $script_dir/scripts/dbManager/list.sh
-            #     break
-            # ;;
+            "List users")
+                source $script_dir/scripts/admin/list.sh
+                break
+            ;;
 
             # "lock/unlock user")
             #     source $script_dir/scripts/dbManager/drop.sh
