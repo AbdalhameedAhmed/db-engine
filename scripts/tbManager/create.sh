@@ -241,13 +241,15 @@ if [[ "$sql_code" =~ $sql_create_regex ]]; then
         column_data=$(extract_column_data "$sql_code")
         if check_repeated_column_names "$column_data";then
         output_error_message "Repeated Column Names! Try to enter a valid query"
+        return
         elif check_repeated_constraints "$column_data";then
         output_error_message "Repeated Constraints! Try to enter a valid query"
+        return
         else
             table_column_names=$(extract_column_names "$column_data")
             table_column_types=$(extract_column_types "$column_data")
             table_column_constraints=$(extract_column_Constraints "$column_data")
-            if ! is_valid_fk "$column_constraints" ; then 
+            if ! is_valid_fk "$table_column_constraints" ; then 
             return 
             fi
             touch $engine_dir/".db-engine-users"/$loggedInUser/$connected_db/$table_name

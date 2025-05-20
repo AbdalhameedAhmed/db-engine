@@ -18,23 +18,17 @@ hash_password() {
     echo -n "$password" | sha256sum | cut -d' ' -f1
 }
 
-# check if user exists
-user_exists() {
-    local username="$1"
-    local result=$(grep "^$username:" "$engine_dir/.db-engine-users/.passwd")
-    if [[ -n $result ]]; then
-        return 0
-    else
-        return 1
-    fi
-}
-
 # add new user to passwd file
 add_new_user() {
     local username="$1"
     local password=$(hash_password "$2")
-    local userData="$username:$password"
-    echo "$userData" >> "$engine_dir/.db-engine-users/.passwd"
+    if [[ "$register_mode" == "admin" ]]; then
+        local userData="$username:$password:1:1::"
+        echo "$userData" >> "$engine_dir/.db-engine-users/.passwd"
+    else
+        local userData="$username:$password:0:1::"
+        echo "$userData" >> "$engine_dir/.db-engine-users/.passwd"
+    fi
     echo
     output_success_message "$username registered successfully"
     echo

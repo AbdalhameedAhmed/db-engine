@@ -13,6 +13,29 @@ output_error_message() {
     echo -e "${red}$1${normal}"
 }
 
+output_important_message() {
+    local blue='\033[0;34m'
+    local normal='\033[0m'
+    echo -e "${blue}$1${normal}"
+}
+
+output_warning_message() {
+    local yellow='\033[0;33m'
+    local normal='\033[0m'
+    echo -e "${yellow}$1${normal}"
+}
+
+# check if user exists
+user_exists() {
+    local username="$1"
+    local result=$(grep "^$username:" "$engine_dir/.db-engine-users/.passwd")
+    if [[ -n $result ]]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
 if_table_exist() {
     local table_name=$1
     if [[ -f  $engine_dir/".db-engine-users"/$loggedInUser/$connected_db/$table_name ]]; then 

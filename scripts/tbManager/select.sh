@@ -42,12 +42,6 @@ if [[ "$sql_code" =~ $select_regex ]]; then
     split_string_to_array "$table_data_types" ":" table_data_types_array
     split_string_to_array "$table_constraints" ":" table_constraints_array
 
-    # check on repeated column names
-    if [[ "$columns" != "*" ]] && check_repeated_column_names columns_array ;then
-        output_error_message "Repeated Column Names! Try to enter a valid query"
-        return
-    fi
-
     # check if all columns exist in table
     if [[ "$columns" != "*" ]] && ! check_all_columns_exist columns_array table_cols_array ;then
         output_error_message "Some columns does not exist in table $table_name, Try to enter a valid query"

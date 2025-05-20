@@ -35,6 +35,10 @@ while true ; do
         "ls")
             source $script_dir/scripts/tbManager/list.sh
             ;;
+
+        *)  
+            output_error_message "Unknown command"
+        ;;
         
     esac
 

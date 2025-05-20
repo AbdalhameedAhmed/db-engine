@@ -38,6 +38,7 @@ read -p "Enter database name: " db_name
         connected_db="$db_name"
         output_success_message "connected to database successfully"
         source $script_dir/scripts/tbManager/main.sh
+        break
         sleep 1
         else
         output_error_message "Database does not exist"

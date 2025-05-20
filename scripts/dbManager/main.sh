@@ -5,6 +5,7 @@
 dbManager_options=("Create database" "Connect to database" "List databases" "Drop database" "Logout")
 logout=""
 connected_db=""
+
 #============ end global variables ============
 
 #============ start helper functions ============
@@ -18,6 +19,7 @@ for option in "${dbManager_options[@]}"; do
             allowed_dbManager_options+=("Connect to database")
             allowed_dbManager_options+=("List databases")
             allowed_dbManager_options+=("Drop database")
+            allowed_dbManager_options+=("Logout")
             break
         fi
     else

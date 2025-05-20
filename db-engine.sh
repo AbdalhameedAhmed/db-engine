@@ -5,9 +5,10 @@
 scriptPath=$(realpath "$0")
 script_dir=$(dirname "$scriptPath")
 engine_dir=$(dirname "$script_dir")
-loggedInUser="ahmed"
+admin_info=""
+loggedInUser=""
 usersContent=""
-auth_options=("Login" "Create new user" "Exit")
+auth_options=("Login" "Create new user" "Create new admin" "Exit")
 allowed_auth_options=()
 PS3='Login/Register:'
 
@@ -42,13 +43,28 @@ set_allowed_auth_options() {
     allowed_auth_options=()
 
     for option in "${auth_options[@]}"; do
-        if [[ "$option" == "Login" ]] ; then
-            if [[ -n "$usersContent" ]]; then
-            allowed_auth_options+=("Login")
-            fi
-        else
-            allowed_auth_options+=("$option")
-        fi
+        case "$option" in
+            "Login")
+                if [[ -n "$usersContent" ]]; then
+                    allowed_auth_options+=("$option")
+                fi
+                ;;
+            "Create new user")
+                if [[ -n "$usersContent" ]]; then
+                    allowed_auth_options+=("$option")
+                fi
+                ;;
+
+            "Create new admin")
+                if [[ -z "$usersContent" ]]; then
+                    allowed_auth_options+=("$option")
+                fi
+                ;;
+            *)
+                allowed_auth_options+=("$option")
+                ;;
+            esac
+
 
     done
 }
@@ -70,12 +86,19 @@ set_allowed_auth_options
     select mode in "${allowed_auth_options[@]}" ; do
         case $mode in
             "Login")
-            # login scenario
+                # login scenario
                 source $script_dir/scripts/auth/login.sh
                 break
                 ;;
             "Create new user")
-            # register scenario
+                # register scenario
+                register_mode="normal"
+                source $script_dir/scripts/auth/register.sh
+                break
+                ;;
+            "Create new admin")
+                # register admin scenario
+                register_mode="admin"
                 source $script_dir/scripts/auth/register.sh
                 break
                 ;;
