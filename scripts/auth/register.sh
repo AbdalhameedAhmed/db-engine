@@ -12,12 +12,6 @@ echo
 
 #============ start helper functions ============
 
-# for hashing password
-hash_password() {
-    local password="$1"
-    echo -n "$password" | sha256sum | cut -d' ' -f1
-}
-
 # add new user to passwd file
 add_new_user() {
     local username="$1"

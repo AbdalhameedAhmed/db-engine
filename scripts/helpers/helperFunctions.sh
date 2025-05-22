@@ -36,6 +36,12 @@ user_exists() {
     fi
 }
 
+# for hashing password
+hash_password() {
+    local password="$1"
+    echo -n "$password" | sha256sum | cut -d' ' -f1
+}
+
 if_table_exist() {
     local table_name=$1
     if [[ -f  $engine_dir/".db-engine-users"/$loggedInUser/$connected_db/$table_name ]]; then 

@@ -14,13 +14,13 @@ echo
 
 #============ end helper functions ============
 
-# "terminate user" "change user password" 
+# "terminate user" 
 
 #============ start script body ============
 while [[ -z "$admin_logout" ]] ; do 
     print_admin_page_header
     PS3=$admin_info"/admin: "
-    select option in "Admin database" "Connect to user" "List users" "lock/unlock user" "Logout"; do
+    select option in "Admin database" "Connect to user" "List users" "lock/unlock user" "change user password" "Logout"; do
         case $option in 
 
             "Admin database")
@@ -50,10 +50,10 @@ while [[ -z "$admin_logout" ]] ; do
             #     source $script_dir/scripts/dbManager/drop.sh
             #     break
             # ;;
-            # "change user password")
-            #     source $script_dir/scripts/dbManager/drop.sh
-            #     break
-            # ;;
+            "change user password")
+                source $script_dir/scripts/admin/change_password.sh
+                break
+            ;;
             "Logout")
             admin_logout="true"
             admin_info=""

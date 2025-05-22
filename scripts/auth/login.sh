@@ -18,11 +18,6 @@ passwd_temp_path="$engine_dir/.db-engine-users/.passwd.temp"
 
 #============ start helper functions ============
 
-hash_password() {
-    local password="$1"
-    echo -n "$password" | sha256sum | cut -d' ' -f1
-}
-
 get_user_info() {
     local username="$1"
     local result=$(grep "^$username:" "$engine_dir/.db-engine-users/.passwd")
@@ -48,33 +43,6 @@ is_admin_user() {
         return 1
     fi
 }
-
-# lock_unlock_user() {
-#     local username="$1"
-#     local new_lock_value="$2"
-#     local message="$3"
-#     touch $passwd_temp_path
-#     cat $passwd_path >> $passwd_temp_path
-    
-#     > $passwd_path
-
-#     IFS=$'\n' 
-#     read -d '' -r -a all_users_data_arr < <(printf %s "$usersContent")
-#     for user_row in "${all_users_data_arr[@]}"; do
-#         if [[ "$user_row" =~ ^$username:.*$ ]] ; then 
-#             split_string_to_array "$user_row" ":" user_data_array
-#             user_data_array[3]="$new_lock_value"
-#             if [[ -n "$message" ]] ; then 
-#             user_data_array[4]="$message"
-#             else
-#             user_data_array[4]="null"
-#             fi
-#             user_row=$(IFS=":"; echo "${user_data_array[*]}")  
-#         fi
-#         echo "$user_row" >> $passwd_path
-#     done
-#     rm $passwd_temp_path
-# }
 
 set_ps_id() {
     local username="$1"
@@ -122,8 +90,8 @@ if [[ -n "$login_user_info" ]]; then
 
         if is_admin_user "$username" ;then 
             admin_info="$username"
-            source $script_dir/scripts/admin/main.sh
             output_success_message "Login successful"
+            source $script_dir/scripts/admin/main.sh
 
         else 
 
