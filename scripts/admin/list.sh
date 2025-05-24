@@ -40,7 +40,6 @@ is_user_online() {
 if [ -n "$all_users" ]; then 
   counter=0
   while IFS= read -r user_list_name; do
-  echo "$user_list_name   $admin_info"
     if [ -n "$user_list_name" ] && ! [[ "$user_list_name" =~ ^$admin_info:.*$ ]]; then 
       counter=$((counter + 1))
       user_name=$(echo "$user_list_name" | cut -d ":" -f 1)
