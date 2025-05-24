@@ -129,10 +129,11 @@ valid_data_type(){
 
         local varchar_size="${BASH_REMATCH[1]}"
         local number_of_chars="${#column_value}"
+        ((number_of_chars-=2)) # remove the two single quotes
         if [[ "$column_value" == "null" ]];then
             return 0
         fi
-        if [[ "$number_of_chars" -ge "$varchar_size" ]]; then
+        if [[ "$number_of_chars" -gt "$varchar_size" ]]; then
         return 2
         fi
         if [[ "$column_value" =~ \'[^\']*\' ]];  then
