@@ -17,10 +17,10 @@ add_new_user() {
     local username="$1"
     local password=$(hash_password "$2")
     if [[ "$register_mode" == "admin" ]]; then
-        local userData="$username:$password:1:1::"
+        local userData="$username:$password:1:1:null:null"
         echo "$userData" >> "$engine_dir/.db-engine-users/.passwd"
     else
-        local userData="$username:$password:0:1::"
+        local userData="$username:$password:0:1:null:null"
         echo "$userData" >> "$engine_dir/.db-engine-users/.passwd"
     fi
     echo

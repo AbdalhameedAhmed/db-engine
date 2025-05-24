@@ -53,11 +53,13 @@ set_ps_id() {
     IFS=$'\n' 
     read -d '' -r -a all_users_data_arr < <(printf %s "$usersContent")
     for user_row in "${all_users_data_arr[@]}"; do
+        ps_id=$(echo "$$")
         if [[ "$user_row" =~ ^$username:.*$ ]] ; then 
-            ps_id=$(echo "$$")
             split_string_to_array "$user_row" ":" user_data_array
             user_data_array[5]="$ps_id"
-            user_row=$(IFS=":"; echo "${user_data_array[*]}")  
+            user_row=$(IFS=":"; echo "${user_data_array[*]}") 
+        elif [[ "${user_data_array[5]}" == "$ps_id" ]] ; then
+            user_data_array[5]="null"
         fi
         echo "$user_row" >> $passwd_path
     done
@@ -79,7 +81,10 @@ if [[ -n "$login_user_info" ]]; then
     input_hash_passwd=$(hash_password "$password")
 
     if [[ $login_user_hash_passwd == $input_hash_passwd ]]; then
-   
+
+        set_ps_id "$username"
+
+
         if ! user_dir_exists "$username" ; then
             mkdir "$engine_dir/.db-engine-users/$username"
             echo
@@ -97,7 +102,6 @@ if [[ -n "$login_user_info" ]]; then
 
             lock_state=$(echo "$login_user_info" | cut -d ':' -f 4)
             if [[ $lock_state == "1" ]]; then
-                set_ps_id "$username"
                 loggedInUser="$username"
                 PS3=$username"/dbManaging: "
                 output_success_message "Login successful"

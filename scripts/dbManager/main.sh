@@ -5,6 +5,8 @@
 dbManager_options=("Create database" "Connect to database" "List databases" "Drop database" "Logout")
 logout=""
 connected_db=""
+passwd_path="$engine_dir/.db-engine-users/.passwd"
+passwd_temp_path="$engine_dir/.db-engine-users/.passwd.temp"
 
 #============ end global variables ============
 
@@ -28,6 +30,27 @@ for option in "${dbManager_options[@]}"; do
 done
     
 }
+
+remove_ps_id() {
+    get_users
+    local username="$1"
+    cat $passwd_path >> $passwd_temp_path
+    
+    > $passwd_path
+
+    IFS=$'\n' 
+    read -d '' -r -a all_users_data_arr < <(printf %s "$usersContent")
+    for user_row in "${all_users_data_arr[@]}"; do
+        if [[ "$user_row" =~ ^$username:.*$ ]] ; then 
+            split_string_to_array "$user_row" ":" user_data_array
+            user_data_array[5]="null"
+            user_row=$(IFS=":"; echo "${user_data_array[*]}") 
+        fi
+        echo "$user_row" >> $passwd_path
+    done
+    rm $passwd_temp_path
+}
+
 #============ end helper functions ============
 
 #============ start script body ============
@@ -58,6 +81,9 @@ while [[ -z "$logout" ]] ; do
             ;;
             "Logout")
             logout="true"
+            if [[ -n "$loggedInUser" && -z "$admin_info" ]];then
+            remove_ps_id $loggedInUser
+            fi
             loggedInUser=""
             PS3='Login/Register:'
             echo
