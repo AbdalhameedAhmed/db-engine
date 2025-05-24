@@ -72,7 +72,6 @@ if [[ "$sql_code" =~ $sql_insert_regex ]]; then
                 if [[ "$validation_error_code" -ne 0 ]] ;then
                     print_data_type_errors "$validation_error_code" "$table_name" "$column" "${values_array[${col_counter}]}" "$column_data_type"
                     has_error="true"
-                    echo "hello data type $column"
                     break
                 fi
 

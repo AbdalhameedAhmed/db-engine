@@ -2,8 +2,6 @@
 
 #============ start initial information ============
 
-get_users
-
 echo
 echo "========================== Register ========================="
 echo

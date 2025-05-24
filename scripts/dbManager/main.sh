@@ -32,7 +32,7 @@ done
 }
 
 remove_ps_id() {
-    get_users
+    usersContent=$(get_users)
     local username="$1"
     cat $passwd_path >> $passwd_temp_path
     

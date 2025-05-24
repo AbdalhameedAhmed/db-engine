@@ -9,7 +9,6 @@ passwd_path="$engine_dir/.db-engine-users/.passwd"
 passwd_temp_path="$engine_dir/.db-engine-users/.passwd.temp"
 admin_info=""
 loggedInUser=""
-usersContent=""
 auth_options=("Login" "Create new user" "Create new admin" "Exit")
 allowed_auth_options=()
 PS3='Login/Register:'
@@ -33,13 +32,9 @@ add_passwd_file() {
     fi
 }
 
-get_users() {
-    usersContent=$(cat "$engine_dir/.db-engine-users/.passwd")
-}
-
 set_allowed_auth_options() {
     # update users content
-    get_users
+    usersContent=$(get_users)
 
     # reset allowed auth options
     allowed_auth_options=()

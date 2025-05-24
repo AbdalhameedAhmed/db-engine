@@ -39,6 +39,7 @@ is_admin_user() {
 
 set_ps_id() {
     local username="$1"
+    usersContent=$(get_users)
     cat $passwd_path >> $passwd_temp_path
     
     > $passwd_path

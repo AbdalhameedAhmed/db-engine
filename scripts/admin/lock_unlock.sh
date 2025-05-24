@@ -6,6 +6,7 @@ lock_unlock_user() {
     local username="$1"
     local new_lock_value="$2"
     local message="$3"
+    usersContent=$(get_users)
     touch $passwd_temp_path
     cat $passwd_path >> $passwd_temp_path
     
@@ -32,8 +33,6 @@ lock_unlock_user() {
 #============ end helper functions ============
 
 #============ start script body ============
-
-get_users
 
 while true ; do
     read -e -p "Enter user name: " user_to_lock

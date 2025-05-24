@@ -25,6 +25,12 @@ output_warning_message() {
     echo -e "${yellow}$1${normal}"
 }
 
+# get all users from passwd file
+get_users() {
+    usersContent=$(cat "$engine_dir/.db-engine-users/.passwd")
+    echo "$usersContent"
+}
+
 # check if user exists
 user_exists() {
     local username="$1"

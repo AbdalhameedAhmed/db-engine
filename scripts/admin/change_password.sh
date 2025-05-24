@@ -3,8 +3,6 @@
 
 #============ start initial information ============
 
-get_users
-
 echo
 echo "========================== Change user password ========================="
 echo
@@ -16,6 +14,7 @@ echo
 change_user_password() {
     local username="$1"
     local password="$2"
+    usersContent=$(get_users)
     touch $passwd_temp_path
     cat $passwd_path >> $passwd_temp_path
     > $passwd_path
