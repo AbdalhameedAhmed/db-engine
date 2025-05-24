@@ -11,14 +11,6 @@ echo
 
 #============ end initial information ============
 
-#============ start constants ============
-
-passwd_path="$engine_dir/.db-engine-users/.passwd"
-passwd_temp_path="$engine_dir/.db-engine-users/.passwd.temp"
-
-#============ end constants ============
-
-
 #============ start helper functions ============
 
 change_user_password() {
