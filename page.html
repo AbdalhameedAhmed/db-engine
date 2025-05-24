@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bash DB Engine Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Visualization & Content Choices:
+        - Overview: Text, simple stat callouts, feature distribution chart. Goal: Intro & Summarize. Method: HTML, Chart.js.
+        - Features > User Roles: Clickable cards (HTML/JS). Goal: Compare. Method: HTML, JS for dynamic content update.
+        - Features > Capabilities: Dynamic list (HTML/JS). Goal: Inform. Method: JS updates based on role selection.
+        - Features > SQL/Data: Text blocks/tables (HTML). Goal: Inform. Method: HTML.
+        - Getting Started: Step-by-step list (HTML). Goal: Instruct. Method: HTML.
+        - Usage Guide > Command Explorer: Dropdown (HTML/JS), dynamic command list (HTML/JS), detail panel (HTML/JS). Goal: Organize/Interact. Method: JS for filtering and display.
+        - SQL Reference: Collapsible sections (HTML/JS). Goal: Inform/Organize. Method: HTML, JS for toggle.
+        - Diagrams: Simple flows for Roles & Auth (HTML/CSS/Tailwind). Goal: Visualize process. Method: HTML/CSS.
+        - Justification: Prioritize interactive exploration of commands and features, making it easier to understand the DB engine's capabilities than just reading the README. No SVG/Mermaid used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif; /* Tailwind default is fine, but explicit for clarity */
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .nav-link {
+            cursor: pointer;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+        }
+        .nav-link:hover {
+            background-color: #E0F2FE; /* sky-100 */
+            color: #0C4A6E; /* sky-800 */
+        }
+        .nav-link.active-nav {
+            background-color: #0284C7; /* sky-600 */
+            color: white;
+            font-weight: 600;
+        }
+        .code-block {
+            background-color: #1F2937; /* gray-800 */
+            color: #F3F4F6; /* gray-100 */
+            padding: 1rem;
+            border-radius: 0.375rem;
+            overflow-x: auto;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.875rem;
+        }
+        .card {
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px; /* Max width for the chart */
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px; /* Base height */
+            max-height: 350px; /* Max height */
+        }
+        @media (min-width: 768px) { /* md breakpoint */
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .tab-button {
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+            border: 1px solid transparent;
+        }
+        .tab-button.active-tab {
+            background-color: #0EA5E9; /* sky-500 */
+            color: white;
+            border-color: #0284C7; /* sky-600 */
+        }
+        .tab-button:not(.active-tab):hover {
+            background-color: #F0F9FF; /* sky-50 */
+        }
+        .flow-diagram div {
+            border: 2px solid #0284C7; /* sky-600 */
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            text-align: center;
+            background-color: #F0F9FF; /* sky-50 */
+            color: #0369A1; /* sky-700 */
+        }
+        .flow-diagram .arrow {
+            font-size: 1.5rem;
+            color: #0284C7; /* sky-600 */
+            margin: 0 0.5rem;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-neutral-800">
+
+    <header class="bg-sky-700 text-white p-6 shadow-md">
+        <div class="container mx-auto">
+            <h1 class="text-3xl font-bold">Bash DB Engine Explorer</h1>
+            <p class="text-sky-100">An interactive guide to the command-line database engine.</p>
+        </div>
+    </header>
+
+    <div class="container mx-auto mt-8 p-4 md:p-0">
+        <div class="md:flex">
+            <aside class="md:w-1/4 lg:w-1/5 md:pr-8 mb-8 md:mb-0">
+                <nav id="sidebarNav" class="bg-white p-4 rounded-lg shadow-lg space-y-2">
+                    <a class="nav-link block" data-target="overview">🚀 Overview</a>
+                    <a class="nav-link block" data-target="features">✨ Features</a>
+                    <a class="nav-link block" data-target="getting-started">🛠️ Getting Started</a>
+                    <a class="nav-link block" data-target="usage-guide">📖 Usage Guide</a>
+                    <a class="nav-link block" data-target="sql-reference">📜 SQL Reference</a>
+                    <a class="nav-link block" data-target="contributing">🤝 Contributing & License</a>
+                </nav>
+            </aside>
+
+            <main class="md:w-3/4 lg:w-4/5">
+                <section id="overview" class="content-section">
+                    <div class="card">
+                        <h2 class="text-2xl font-semibold text-sky-700 mb-4">Welcome to the Bash DB Engine!</h2>
+                        <p class="mb-4">This interactive explorer helps you understand the Bash DB Engine, a lightweight, command-line database engine implemented entirely in Bash. It offers user management, database operations, and basic SQL query handling. Use the navigation on the left to explore its capabilities.</p>
+                        <p class="mb-4">The engine is designed for simplicity and direct terminal-based database management. It's a great project to understand how basic database functionalities can be scripted.</p>
+                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            <div class="bg-sky-50 p-4 rounded-lg">
+                                <h3 class="text-lg font-semibold text-sky-600">Core Functionalities</h3>
+                                <ul class="list-disc list-inside text-neutral-700 mt-2">
+                                    <li>User Authentication</li>
+                                    <li>Role-Based Access</li>
+                                    <li>Database Management</li>
+                                    <li>SQL Query Execution</li>
+                                    <li>Admin Controls</li>
+                                </ul>
+                            </div>
+                            <div class="bg-emerald-50 p-4 rounded-lg">
+                                <h3 class="text-lg font-semibold text-emerald-600">Key Technologies</h3>
+                                 <ul class="list-disc list-inside text-neutral-700 mt-2">
+                                    <li>Bash Scripting</li>
+                                    <li>Command-Line Interface</li>
+                                    <li>Basic File System Storage</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <h3 class="text-xl font-semibold text-sky-700 mb-3">Feature Distribution</h3>
+                        <p class="mb-4">The engine's features span across several key areas, providing a comprehensive set of tools for command-line database management. The chart below gives a visual breakdown.</p>
+                        <div class="chart-container bg-white p-4 rounded-lg shadow">
+                            <canvas id="featuresChart"></canvas>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="features" class="content-section">
+                    <div class="card">
+                        <h2 class="text-2xl font-semibold text-sky-700 mb-4">Core Features</h2>
+                        <p class="mb-6">The Bash DB Engine is packed with features to manage users and databases. Explore the different aspects below to understand its capabilities. You can switch between different feature categories to learn more.</p>
+
+                        <div class="mb-6">
+                            <h3 class="text-xl font-semibold text-sky-600 mb-3">User Authentication & Roles</h3>
+                            <p class="mb-4">The system has a built-in user authentication mechanism and distinguishes between Admin and Normal Users.</p>
+                            <div class="flow-diagram flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-2 mb-4">
+                                <div>First User Registers</div>
+                                <div class="arrow transform sm:rotate-0 rotate-90">➔</div>
+                                <div>Becomes Admin</div>
+                            </div>
+                             <div class="flow-diagram flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-2">
+                                <div>Other User Registers</div>
+                                <div class="arrow transform sm:rotate-0 rotate-90">➔</div>
+                                <div>Becomes Normal User</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-6">
+                            <h3 class="text-xl font-semibold text-sky-600 mb-3">User Capabilities</h3>
+                            <p class="mb-4">Select a user role to see their specific capabilities:</p>
+                            <div class="flex space-x-2 mb-4">
+                                <button class="tab-button" data-role="normal">Normal User</button>
+                                <button class="tab-button" data-role="admin">Admin User</button>
+                            </div>
+                            <div id="capabilitiesDisplay" class="bg-slate-100 p-4 rounded-md min-h-[150px]">
+                                <p>Select a role above to see details.</p>
+                            </div>
+                        </div>
+
+                        <div class="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <h3 class="text-xl font-semibold text-sky-600 mb-3">SQL Query Support</h3>
+                                <p class="mb-2">Handles fundamental SQL operations:</p>
+                                <ul class="list-disc list-inside bg-sky-50 p-3 rounded">
+                                    <li><code>CREATE</code></li>
+                                    <li><code>UPDATE</code></li>
+                                    <li><code>INSERT</code></li>
+                                    <li><code>DELETE</code></li>
+                                </ul>
+                            </div>
+                            <div>
+                                <h3 class="text-xl font-semibold text-sky-600 mb-3">Data Types & Constraints</h3>
+                                <p class="mb-2">Supported data types:</p>
+                                <ul class="list-disc list-inside bg-sky-50 p-3 rounded mb-3">
+                                    <li><code>INT</code> (Integer)</li>
+                                    <li><code>VARCHAR(length)</code></li>
+                                </ul>
+                                <p class="mb-2">Supported constraints:</p>
+                                <ul class="list-disc list-inside bg-sky-50 p-3 rounded">
+                                    <li><code>PRIMARY KEY</code></li>
+                                    <li><code>FOREIGN KEY</code></li>
+                                    <li><code>NOT NULL</code></li>
+                                    <li><code>UNIQUE</code></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="getting-started" class="content-section">
+                    <div class="card">
+                        <h2 class="text-2xl font-semibold text-sky-700 mb-4">Getting Started</h2>
+                        <p class="mb-6">Follow these instructions to get a copy of the project up and running on your local machine. This section guides you through prerequisites and installation steps.</p>
+
+                        <h3 class="text-xl font-semibold text-sky-600 mb-3">Prerequisites</h3>
+                        <p class="mb-1">Ensure your system meets the following requirements:</p>
+                        <ul class="list-disc list-inside bg-sky-50 p-4 rounded-md mb-6">
+                            <li>A Unix-like operating system (Linux, macOS).</li>
+                            <li>Bash shell (version 4.0 or higher recommended).</li>
+                        </ul>
+
+                        <h3 class="text-xl font-semibold text-sky-600 mb-3">Installation Steps</h3>
+                        <ol class="list-decimal list-inside space-y-3">
+                            <li>
+                                <strong class="text-neutral-700">Clone the repository:</strong>
+                                <p class="text-sm text-neutral-600">Replace <code>your-username/your-repo-name</code> with the actual GitHub repository path.</p>
+                                <div class="code-block mt-1">https://github.com/AbdalhameedAhmed/db-engine.git</div>
+                            </li>
+                            <li>
+                                <strong class="text-neutral-700">Navigate into the project directory:</strong>
+                                <div class="code-block mt-1">cd db-engine</div>
+                            </li>
+                            <li>
+                                <strong class="text-neutral-700">Make the main script executable:</strong>
+                                <div class="code-block mt-1">chmod +x db-engine.sh</div>
+                            </li>
+                        </ol>
+                    </div>
+                </section>
+
+                <section id="usage-guide" class="content-section">
+                    <div class="card">
+                        <h2 class="text-2xl font-semibold text-sky-700 mb-4">Usage Guide</h2>
+                        <p class="mb-6">This section explains how to run the DB Engine and interact with its features, including user authentication and available commands for different user roles. Explore the commands to understand their syntax and purpose.</p>
+
+                        <h3 class="text-xl font-semibold text-sky-600 mb-3">Running the Engine</h3>
+                        <p class="mb-2">To start the DB Engine, simply run the main script from your terminal within the project directory:</p>
+                        <div class="code-block mb-6">./db-engine.sh</div>
+
+                        <h3 class="text-xl font-semibold text-sky-600 mb-3">User Authentication</h3>
+                        <p class="mb-4">Upon launching, you'll be prompted to <code>Create a new admin</code>:</p>
+                        <div class="flow-diagram flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-2 mb-6">
+                            <div>Run ./db-engine.sh</div>
+                            <div class="arrow transform sm:rotate-0 rotate-90">➔</div>
+                            <div>Prompt: Create a new admin</div>
+                            <div class="arrow transform sm:rotate-0 rotate-90">➔</div>
+                            <div>Access Granted / New Admin Created</div>
+                        </div>
+                        <p class="mb-4">After creating the admin user, you'll be prompted to <code>login</code> or <code>register</code>:</p>
+                        <div class="flow-diagram flex flex-col sm:flex-row items-center justify-center space-y-2 sm:space-y-0 sm:space-x-2 mb-6">
+                            <div>Prompt: Login or Register?</div>
+                            <div class="arrow transform sm:rotate-0 rotate-90">➔</div>
+                            <div>Access Granted / New User Created</div>
+                        </div>
+                        <ul class="list-disc list-inside space-y-1 mb-6">
+                            <li><strong>Register:</strong> The first registered user becomes Admin. Others are Normal Users.</li>
+                            <li><strong>Login:</strong> Use your registered credentials.</li>
+                        </ul>
+
+                        <h3 class="text-xl font-semibold text-sky-600 mb-3">Command Explorer</h3>
+                        <p class="mb-4">Select a user type to see available commands and their descriptions:</p>
+                        <select id="userTypeSelector" class="p-2 border border-neutral-300 rounded-md mb-4 bg-white">
+                            <option value="normal">Normal User Commands</option>
+                            <option value="admin">Admin User Commands</option>
+                        </select>
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div id="commandList" class="bg-slate-100 p-4 rounded-md max-h-96 overflow-y-auto">
+                                </div>
+                            <div id="commandDetail" class="bg-white p-4 rounded-md border border-neutral-200 min-h-[200px]">
+                                <p class="text-neutral-500">Select a command from the list to see its details.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="sql-reference" class="content-section">
+                    <div class="card">
+                        <h2 class="text-2xl font-semibold text-sky-700 mb-4">SQL Reference</h2>
+                        <p class="mb-6">This section provides a detailed reference for the supported SQL queries, data types, and constraints within the Bash DB Engine. Understanding these elements is key to effectively using the database functionalities.</p>
+
+                        <div>
+                            <button class="collapsible-trigger w-full text-left p-3 bg-sky-100 hover:bg-sky-200 rounded-md text-sky-700 font-semibold mb-2">Supported SQL Queries</button>
+                            <div class="collapsible-content hidden p-4 border border-sky-200 rounded-b-md mb-4">
+                                <p class="mb-3">When connected to a database, you can execute the following types of SQL queries:</p>
+                                <ul class="space-y-3">
+                                    <li><strong>CREATE TABLE:</strong>
+                                        <div class="code-block mt-1">CREATE TABLE table_name (column1 datatype [constraint], ...);</div>
+                                    </li>
+                                    <li><strong>INSERT INTO:</strong>
+                                        <div class="code-block mt-1">INSERT INTO table_name (column1, column2) VALUES (value1, value2);</div>
+                                    </li>
+                                    <li><strong>UPDATE:</strong>
+                                        <div class="code-block mt-1">UPDATE table_name SET column1 = new_value WHERE condition;</div>
+                                    </li>
+                                    <li><strong>DELETE FROM:</strong>
+                                        <div class="code-block mt-1">DELETE FROM table_name WHERE condition;</div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div>
+                            <button class="collapsible-trigger w-full text-left p-3 bg-sky-100 hover:bg-sky-200 rounded-md text-sky-700 font-semibold mb-2">Data Types</button>
+                            <div class="collapsible-content hidden p-4 border border-sky-200 rounded-b-md mb-4">
+                                <ul class="list-disc list-inside space-y-2">
+                                    <li><code>INT</code>: For integer values.</li>
+                                    <li><code>VARCHAR(length)</code>: For strings, where <code>length</code> specifies the maximum number of characters.</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div>
+                            <button class="collapsible-trigger w-full text-left p-3 bg-sky-100 hover:bg-sky-200 rounded-md text-sky-700 font-semibold mb-2">Constraints</button>
+                            <div class="collapsible-content hidden p-4 border border-sky-200 rounded-b-md">
+                                <ul class="list-disc list-inside space-y-2">
+                                    <li><code>PRIMARY KEY</code>: Uniquely identifies each record in a table.</li>
+                                    <li><code>FOREIGN KEY</code>: Links two tables together.</li>
+                                    <li><code>NOT NULL</code>: Ensures that a column cannot have a NULL value.</li>
+                                    <li><code>UNIQUE</code>: Ensures that all values in a column are different.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="contributing" class="content-section">
+                    <div class="card">
+                        <h2 class="text-2xl font-semibold text-sky-700 mb-4">Contributing & License</h2>
+                        <p class="mb-6">Information about how to contribute to the Bash DB Engine project and details about its licensing.</p>
+                        
+                        <h3 class="text-xl font-semibold text-sky-600 mb-3">Contributing</h3>
+                        <p class="mb-4">Contributions are welcome! If you have suggestions for improvements or find any bugs, please open an issue or submit a pull request on the project's GitHub repository.</p>
+
+                        <h3 class="text-xl font-semibold text-sky-600 mb-3">License</h3>
+                        <p>This project is open-source and available under the <strong class="text-neutral-700">MIT License</strong>.</p>
+                        <p class="mt-2 text-sm text-neutral-600">The MIT License is a permissive free software license originating at the Massachusetts Institute of Technology (MIT). It puts only very limited restriction on reuse and has, therefore, high license compatibility.</p>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <footer class="text-center p-6 mt-12 border-t border-neutral-200">
+        <p class="text-neutral-600">&copy; Bash DB Engine Explorer. Created from README content.</p>
+    </footer>
+
+<script>
+    const navLinks = document.querySelectorAll('.nav-link');
+    const contentSections = document.querySelectorAll('.content-section');
+    const capabilitiesDisplay = document.getElementById('capabilitiesDisplay');
+    const roleButtons = document.querySelectorAll('.tab-button[data-role]');
+    const userTypeSelector = document.getElementById('userTypeSelector');
+    const commandListDiv = document.getElementById('commandList');
+    const commandDetailDiv = document.getElementById('commandDetail');
+    const collapsibleTriggers = document.querySelectorAll('.collapsible-trigger');
+
+    const capabilitiesData = {
+        normal: [
+            "Create personal databases.",
+            "List existing databases.",
+            "Remove databases.",
+            "Connect to a specific database to execute SQL queries (CREATE, UPDATE, INSERT, DELETE)."
+        ],
+        admin: [
+            "Perform all normal user operations.",
+            "<strong>Control User Databases:</strong> Connect to any user's account and manage their databases.",
+            "<strong>User Management:</strong>",
+            "&nbsp;&nbsp;- Lock/Unlock user accounts with a custom message.",
+            "&nbsp;&nbsp;- List all registered users and view their online/offline status.",
+            "&nbsp;&nbsp;- Terminate active user sessions by killing their process."
+        ]
+    };
+
+    const commandsData = {
+        normal: [
+            { cmd: "create database", desc: "Creates a new database for the user." },
+            { cmd: "list databases", desc: "Lists all databases owned by the user." },
+            { cmd: "remove database", desc: "Removes one of the user's databases." },
+            { cmd: "connect to database", desc: "Connects to a specific database to execute SQL queries." }
+        ],
+        admin: [
+            { cmd: "create database", desc: "Creates a new database for the admin." },
+            { cmd: "list databases", desc: "Lists all databases owned by the admin." },
+            { cmd: "remove database", desc: "Removes one of the admin's databases." },
+            { cmd: "connect to database", desc: "Connects to a specific database to execute SQL queries." },
+            { cmd: "connect user", desc: "Allows admin to manage databases belonging to the specified user." },
+            { cmd: "lock user \"<message>\"", desc: "Locks a user's account and sets a message." },
+            { cmd: "unlock user", desc: "Unlocks a user's account." },
+            { cmd: "list users", desc: "Displays all users and their online/offline status." },
+            { cmd: "terminate session", desc: "Kills the process of an active user session." }
+        ]
+    };
+
+    function showSection(targetId) {
+        contentSections.forEach(section => {
+            section.classList.toggle('active', section.id === targetId);
+        });
+        navLinks.forEach(link => {
+            link.classList.toggle('active-nav', link.dataset.target === targetId);
+        });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    navLinks.forEach(link => {
+        link.addEventListener('click', () => showSection(link.dataset.target));
+    });
+
+    roleButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const role = button.dataset.role;
+            capabilitiesDisplay.innerHTML = `<h4 class="font-semibold mb-2 text-lg capitalize text-sky-700">${role} User Capabilities:</h4><ul class="list-disc list-inside space-y-1">${capabilitiesData[role].map(cap => `<li>${cap}</li>`).join('')}</ul>`;
+            roleButtons.forEach(btn => btn.classList.remove('active-tab'));
+            button.classList.add('active-tab');
+        });
+    });
+
+    function populateCommands(userType) {
+        commandListDiv.innerHTML = '';
+        const commands = commandsData[userType];
+        if (commands) {
+            const ul = document.createElement('ul');
+            ul.className = 'space-y-2';
+            commands.forEach(command => {
+                const li = document.createElement('li');
+                const btn = document.createElement('button');
+                btn.className = 'w-full text-left p-2 hover:bg-sky-100 rounded-md text-sm';
+                btn.textContent = command.cmd;
+                btn.onclick = () => {
+                    commandDetailDiv.innerHTML = `<h4 class="font-semibold text-sky-700 mb-2">Command: ${command.cmd}</h4><p class="text-neutral-700">${command.desc}</p>`;
+                };
+                li.appendChild(btn);
+                ul.appendChild(li);
+            });
+            commandListDiv.appendChild(ul);
+        }
+        commandDetailDiv.innerHTML = '<p class="text-neutral-500">Select a command from the list to see its details.</p>';
+    }
+
+    userTypeSelector.addEventListener('change', (event) => {
+        populateCommands(event.target.value);
+    });
+    
+    collapsibleTriggers.forEach(trigger => {
+        trigger.addEventListener('click', () => {
+            const content = trigger.nextElementSibling;
+            content.classList.toggle('hidden');
+            trigger.classList.toggle('rounded-b-md', content.classList.contains('hidden')); 
+        });
+    });
+
+    // Initial setup
+    showSection('overview'); // Show overview by default
+    if (roleButtons.length > 0) { // Set default active tab for roles
+      roleButtons[0].click();
+    }
+    populateCommands(userTypeSelector.value); // Populate commands for default selected user type
+
+    // Chart.js
+    const ctxFeatures = document.getElementById('featuresChart')?.getContext('2d');
+    if (ctxFeatures) {
+        new Chart(ctxFeatures, {
+            type: 'doughnut',
+            data: {
+                labels: ['User Management', 'DB Operations', 'SQL Support', 'Admin Tools'],
+                datasets: [{
+                    label: 'Feature Distribution',
+                    data: [3, 4, 4, 4], // Approx count of sub-features based on README
+                    backgroundColor: [
+                        '#38BDF8', // sky-400
+                        '#0EA5E9', // sky-500
+                        '#0284C7', // sky-600
+                        '#0369A1'  // sky-700
+                    ],
+                    borderColor: '#FFFFFF', // white
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                         labels: {
+                            padding: 15,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed !== null) {
+                                    label += context.parsed;
+                                }
+                                return label + ' areas';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+</script>
+
+</body>
+</html>
