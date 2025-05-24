@@ -5,6 +5,8 @@
 scriptPath=$(realpath "$0")
 script_dir=$(dirname "$scriptPath")
 engine_dir=$(dirname "$script_dir")
+passwd_path="$engine_dir/.db-engine-users/.passwd"
+passwd_temp_path="$engine_dir/.db-engine-users/.passwd.temp"
 admin_info=""
 loggedInUser=""
 usersContent=""

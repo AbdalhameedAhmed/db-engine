@@ -1,12 +1,5 @@
 #! /usr/bin/bash
 
-#============ start global variables ============
-
-passwd_path="$engine_dir/.db-engine-users/.passwd"
-passwd_temp_path="$engine_dir/.db-engine-users/.passwd.temp"
-
-#============ end global variables ============
-
 #============ start helper functions ============
 
 lock_unlock_user() {

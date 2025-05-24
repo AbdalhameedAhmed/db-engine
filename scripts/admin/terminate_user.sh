@@ -11,19 +11,11 @@ echo
 
 #============ end initial information ============
 
-#============ start constants ============
-
-passwd_path="$engine_dir/.db-engine-users/.passwd"
-passwd_temp_path="$engine_dir/.db-engine-users/.passwd.temp"
-
-#============ end constants ============
-
-
 #============ start helper functions ============
 
 get_user_info() {
     local username="$1"
-    local result=$(grep "^$username:" "$engine_dir/.db-engine-users/.passwd")
+    local result=$(grep "^$username:" $passwd_path)
     echo $result
 }
 
@@ -57,10 +49,10 @@ while true; do
     user_ps=$(echo "$user_data" | cut -d: -f6)
     if is_user_online $user_ps; then
     kill -9 $user_ps
-    output_success_message "User has been terminated."
+    output_success_message "User $username has been terminated."
     break
     else
-    output_error_message "User is offline."
+    output_error_message "User $username is offline."
     fi
 done
 
