@@ -75,9 +75,14 @@ if [[ -n "$login_user_info" ]]; then
     input_hash_passwd=$(hash_password "$password")
 
     if [[ $login_user_hash_passwd == $input_hash_passwd ]]; then
+        user_ps_id=$(echo "$login_user_info" | cut -d ':' -f6)
+        user_status=$(is_user_online "$user_ps_id")
+        if [[ $user_status == "online" ]]; then
+        output_error_message "User is already logged-in in another terminal"
+        return
+        fi  
 
         set_ps_id "$username"
-
 
         if ! user_dir_exists "$username" ; then
             mkdir "$engine_dir/.db-engine-users/$username"

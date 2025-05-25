@@ -340,14 +340,21 @@ get_table_child() {
 }
 
 is_user_online() {
-    local user_ps=$1
+
+    local user_ps="$1"
+    if [[ "$user_ps" -eq "null" ]]; then
+        echo "offline"
+        return
+    fi
+    
     local all_pr=$(ps aux | grep .*db-engine.sh$ | sed -e 's/\s\+/ /g' | cut -d " " -f 2)
     IFS=$'\n'
     read -d '' -r -a all_ps_array < <(printf %s "$all_pr")
+    
     for ps_value in "${all_ps_array[@]}";do
     if [[ "$ps_value" == "$user_ps" ]];then
-
       echo "online"
+      return
     fi
     done 
     echo "offline"
