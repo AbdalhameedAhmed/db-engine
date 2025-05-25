@@ -11,12 +11,6 @@ echo
 
 #============ start helper functions ============
 
-get_user_info() {
-    local username="$1"
-    local result=$(grep "^$username:" $passwd_path)
-    echo $result
-}
-
 is_user_online() {
     local user_ps=$1
     local all_pr=$(ps aux | grep .*db-engine.sh$ | sed -e 's/\s\+/ /g' | cut -d " " -f 2)

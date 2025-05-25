@@ -11,12 +11,6 @@ echo
 
 #============ start helper functions ============
 
-get_user_info() {
-    local username="$1"
-    local result=$(grep "^$username:" "$engine_dir/.db-engine-users/.passwd")
-    echo $result
-}
-
 user_dir_exists() {
     local username="$1"
     if [[ -d "$engine_dir/.db-engine-users/$username" ]]; then

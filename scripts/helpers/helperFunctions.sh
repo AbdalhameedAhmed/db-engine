@@ -27,19 +27,26 @@ output_warning_message() {
 
 # get all users from passwd file
 get_users() {
-    usersContent=$(cat "$engine_dir/.db-engine-users/.passwd")
+    usersContent=$(cat "$passwd_path")
     echo "$usersContent"
 }
 
 # check if user exists
 user_exists() {
     local username="$1"
-    local result=$(grep "^$username:" "$engine_dir/.db-engine-users/.passwd")
+    local result=$(grep "^$username:" "$passwd_path")
     if [[ -n $result ]]; then
         return 0
     else
         return 1
     fi
+}
+
+# get user info from .passwd file
+get_user_info() {
+    local username="$1"
+    local user_info=$(grep "^$username:" $passwd_path)
+    echo $user_info
 }
 
 # for hashing password
@@ -346,7 +353,7 @@ is_user_online() {
         echo "offline"
         return
     fi
-    
+
     local all_pr=$(ps aux | grep .*db-engine.sh$ | sed -e 's/\s\+/ /g' | cut -d " " -f 2)
     IFS=$'\n'
     read -d '' -r -a all_ps_array < <(printf %s "$all_pr")

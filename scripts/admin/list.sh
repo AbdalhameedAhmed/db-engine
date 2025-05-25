@@ -11,16 +11,6 @@ declare -a records=()
 
 #============ end global variables ============
 
-#============ start helper functions ============
-
-get_user_info() {
-    local username="$1"
-    local result=$(grep "^$username:" "$engine_dir/.db-engine-users/.passwd")
-    echo $result
-}
-
-#============ end helper functions ============
-
 #============ start script body ============
 
 if [ -n "$all_users" ]; then 
